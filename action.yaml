@@ -29,7 +29,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name Prepare session token
+    - name: Prepare session token
       if: ${{ github.event.inputs.session_token != '' }}
       shell: bash
       run: |
