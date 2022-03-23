@@ -22,10 +22,19 @@ inputs:
     description: 'Image tag of the sniffer to use'
     required: true
     default: "dev"
+  session_token:
+    description: 'Session token created with Seekret CLI generate-session-token command'
+    required: false
 
 runs:
   using: "composite"
   steps:
+    - name Prepare session token
+      if: ${{ github.event.inputs.session_token }}
+      shell: bash
+      run: |
+        echo ::set-output name=sniffer_artifacts::"{\"traffic\": \"ci\/${{ github.event.inputs.session_token }}\"}"
+        echo Using session token: ${{ github.event.inputs.session_token }}
     - name: Run sniffer docker
       shell: bash
       env:
@@ -37,6 +46,7 @@ runs:
         SEEKRET_SNIFFER_STORAGE_UPLOADING_STRATEGY_UPLOAD_INTERVAL: 10s
         SEEKRET_SNIFFER_LOG_CONSOLE_LOGGING_ENABLED: true
         SEEKRET_SNIFFER_LOG_LEVEL: debug
+        SEEKRET_SNIFFER_STORAGE_ARTIFACTS_DIRECTORIES: ${{ steps.vars.outputs.sniffer_artifacts }}
 
       run: |
         env > env.list
