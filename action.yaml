@@ -30,26 +30,27 @@ runs:
   using: "composite"
   steps:
     - name: Prepare session token
-      if: ${{ github.event.inputs.session_token != '' }}
+      id: sniffer_artifacts
+      if: ${{ inputs.session_token != '' }}
       shell: bash
       run: |
-        echo ::set-output name=sniffer_artifacts::"{\"traffic\": \"ci\/${{ github.event.inputs.session_token }}\"}"
-        echo Using session token: ${{ github.event.inputs.session_token }}
+        echo ::set-output name=sniffer_artifacts::"{\"traffic\": \"ci\/${{ inputs.session_token }}\"}"
+        echo Using session token: ${{ inputs.session_token }}
     - name: Run sniffer docker
       shell: bash
       env:
-        SEEKRET_SNIFFER_AUTHENTICATION_AUTH_URL: ${{ github.event.inputs.auth_url }}
-        SEEKRET_SNIFFER_AUTHENTICATION_WORKSPACE: ${{ github.event.inputs.workspace }}
-        SEEKRET_SNIFFER_AUTHENTICATION_CLIENT_ID: ${{ github.event.inputs.client_id }}
-        SEEKRET_SNIFFER_AUTHENTICATION_CLIENT_SECRET: ${{ github.event.inputs.client_secret }}
-        SEEKRET_SNIFFER_ANONYMIZATION_ENABLED: ${{ github.event.inputs.anonymization }}
+        SEEKRET_SNIFFER_AUTHENTICATION_AUTH_URL: ${{ inputs.auth_url }}
+        SEEKRET_SNIFFER_AUTHENTICATION_WORKSPACE: ${{ inputs.workspace }}
+        SEEKRET_SNIFFER_AUTHENTICATION_CLIENT_ID: ${{ inputs.client_id }}
+        SEEKRET_SNIFFER_AUTHENTICATION_CLIENT_SECRET: ${{ inputs.client_secret }}
+        SEEKRET_SNIFFER_ANONYMIZATION_ENABLED: ${{ inputs.anonymization }}
         SEEKRET_SNIFFER_STORAGE_UPLOADING_STRATEGY_UPLOAD_INTERVAL: 10s
         SEEKRET_SNIFFER_LOG_CONSOLE_LOGGING_ENABLED: true
         SEEKRET_SNIFFER_LOG_LEVEL: debug
-        SEEKRET_SNIFFER_STORAGE_ARTIFACTS_DIRECTORIES: ${{ steps.vars.outputs.sniffer_artifacts }}
+        SEEKRET_SNIFFER_STORAGE_ARTIFACTS_DIRECTORIES: ${{ steps.sniffer_artifacts.outputs.sniffer_artifacts }}
 
       run: |
         env > env.list
         sudo docker run -t -a STDOUT --env-file env.list --net=host --privileged -v /sys:/sys  \
           -v /var/run/docker.sock:/var/run/docker.sock -v /proc:/proc -v /etc/os-release:/etc/os-release    \
-          -v /var/lib:/var/lib -v /etc/machine-id:/etc/machine-id gcr.io/seekret-tests/ebpf-sniffer:${{ github.event.inputs.sniffer_image_tag }} &
+          -v /var/lib:/var/lib -v /etc/machine-id:/etc/machine-id gcr.io/seekret-tests/ebpf-sniffer:${{ inputs.sniffer_image_tag }} &
